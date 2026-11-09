@@ -1,58 +1,109 @@
 # handoff · 通用 Agent 交接 Skill
 
-让任何 agent（Codex / Claude / DSH / 任意模型与提供商）在接手项目时，**用最少的 token** 写出一份下一任能直接照着干活的 `HANDOFF.md`。
+> 一份基于事实的交接 skill，让下一位 agent 真正接得上项目。
 
-```
-触发：交接 / handoff / 换 agent / 接手 / 写交接文档 / 给下一个 agent
-产物：项目根目录一个 HANDOFF.md（≤150 行），外加在 AGENTS.md / CLAUDE.md / README.md 顶部一行入口声明
-依赖：只要能读写文件 —— 不需要 git、shell、网络
-```
+[![许可证：MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![支持 Codex、Claude、DSH](https://img.shields.io/badge/harness-Codex%20%7C%20Claude%20%7C%20DSH-6f42c1.svg)](SKILL.md)
 
-## 为什么需要它
+`handoff` 会在项目根目录创建或更新 `HANDOFF.md`，适用于 Codex、Claude、DSH 以及其他模型或提供商。它记录项目定位、背景、当前事实、踩坑、不确定性和关键路径，不把整个仓库复制进一份文档。
 
-换 agent（或换人）时最贵的是重新摸清项目。大多数交接要么没写、要么把 README 重抄一遍。这个 skill 只让 agent 记录三件真正值钱的事：**现在是什么状态、哪里会踩坑、下一步该干什么**——其余一律用「文件路径 + 一句话」引用，不复制。
+## 它解决什么问题
 
-## 特性
+Agent 交接时，最贵的是重新摸清上下文。一份有用的交接文档，应该让下一位 agent 在修改前先知道：
 
-- **通用**：不限项目类型——程序、数据、文档、配置、agent/提示词工程都适用；有 git 用 git，没有就用文件修改时间。
-- **省 token**：单文件 ≤150 行，每节 3~10 条；收集信息用 grep/head，不整篇通读。
-- **跨 harness**：就是一份标准 `SKILL.md`（YAML frontmatter），Codex / Claude / DSH 的 skill 目录都能直接放。
-- **有入口**：自动在 `AGENTS.md` / `CLAUDE.md` / `README.md` 顶部加「接手先读 HANDOFF.md」，保证下一位一定看得到。
-- **职责移交**：文档里自带维护规则——每次接手/大改动更新状态快照与变更历史，换 agent 时必须写清「未完成 / 下一步 / 待确认」。
+- 这个项目是什么、服务谁、为什么存在；
+- 项目如何发展，上一位交接 agent 实际做了什么；
+- 什么可以运行，哪里会出问题，哪些事实仍不确定；
+- 哪些源码、入口、配置、数据、部署、测试和文档路径值得继续读。
+
+## 快速开始
+
+1. 把本文件夹复制到你的 harness 的 skills 目录。
+2. 对 agent 说：
+
+   ```text
+   写一下交接文档
+   ```
+
+   或：
+
+   ```text
+   更新 HANDOFF.md，给下一个 agent 接手
+   ```
+
+3. agent 会查证项目和权威文档，写入或更新 `HANDOFF.md`，在入口文件加上提示，并记录已验证和未验证的内容。
+
+## 核心特性
+
+| | 能得到什么 |
+|---|---|
+| **基于事实** | 内容来自当前工作区、历史记录或明确的权威文件，不靠猜测。 |
+| **完整优先** | 先保留七项必备内容，再做省 token 的压缩。 |
+| **适合 GitHub 浏览** | 默认以 ≤150 行为目标，但这是软目标，不会为了凑行数截断关键信息。 |
+| **如实记录状态** | 明确分支、提交、未提交文件、已验证检查和未验证假设。 |
+| **目录可接手** | 用一行说明有意义的源码、入口、配置、数据、部署、文档和测试路径。 |
+| **隐私收敛** | 默认不写密钥、令牌、cookie、登录态、私聊和个人敏感资料。 |
+| **跨 harness** | 只需要读写文件；git、shell 和网络都只是可选的查证来源。 |
+
+## 必须写入交接文档的内容
+
+每份 `HANDOFF.md` 必须包含以下七项；没有证据时明确写 `暂无可验证记录`，不能猜测：
+
+1. **项目定位**：做什么、服务谁、不是什么。
+2. **项目背景及发展**：为什么存在、从什么演化来、关键阶段的“触发 → 变化 → 结果”。
+3. **本次交接 agent 做了什么**：检查、修改、验证，以及明确没有做的事。
+4. **为什么要做**：项目目的，以及本次交接或改动要解决的风险和缺口。
+5. **踩过的坑**：按“现象 → 原因 → 绕法/修法”记录。
+6. **不确定性**：未知、可能过期、待用户确认的事项，以及权威来源。
+7. **完整项目目录及功能**：用“路径 → 一句话功能”覆盖有意义的路径，而不只是顶层目录。
+
+运行/测试/部署命令、约定、安全边界、未完成事项和变更历史按项目实际情况补齐。如果信息分散在 README、AGENTS、设计说明或运维手册中，交接文档仍要写摘要并给出权威路径，不能只丢一个链接。
+
+<details>
+<summary>模板与详细规则</summary>
+
+完整流程和可复制模板见 [`SKILL.md`](SKILL.md)。
+
+默认目标是 **≤150 行**，不是硬上限。先用路径摘要、短时间线和表格压缩；如果完整保留必备内容后仍然超出，就保留内容，并在 `HANDOFF.md` 开头说明原因。
+
+项目没有可验证历史时要明确写出来。不要编造背景，也不要把未提交的工作区草稿写成已发布结果。
+
+</details>
 
 ## 安装
 
-把本仓库文件夹整个复制进对应 harness 的 skills 目录即可（同名文件夹）：
+把本仓库文件夹复制到对应 harness 的 skills 目录：
 
-| 工具 | 技能目录（示例） |
+| Harness | 示例路径 |
 |---|---|
 | Codex | `~/.codex/skills/handoff/` 或 `~/.agents/skills/handoff/` |
 | Claude | `~/.claude/skills/handoff/` |
-| DSH | `~/.dsh/skills/handoff/`（服务器上为 `/root/.dsh/skills/handoff/`） |
+| DSH | `~/.dsh/skills/handoff/` 或 `/root/.dsh/skills/handoff/` |
 
-## 使用
+不需要安装额外依赖。
 
-对 agent 说任意触发词，例如：
+## 仓库结构
 
 ```text
-写一下交接文档
-给下一个 agent 写个交接
-更新 HANDOFF.md
+handoff/
+├── SKILL.md                       # 行为、流程、必备章节和模板
+├── examples/HANDOFF.example.md    # 虚构但完整的示例
+├── README.md                      # 本说明
+├── CHANGELOG.md                   # 更新日志
+└── LICENSE                        # MIT 许可证
 ```
 
-agent 会：快扫项目 → 写/更新 `HANDOFF.md` → 在入口文件加一行声明 → 追加变更历史。
+## 安全与范围
 
-生成的文档骨架见 [`SKILL.md`](SKILL.md) 里的模板，一个填好的例子见 [`examples/HANDOFF.example.md`](examples/HANDOFF.example.md)。
+- skill 修改目标项目的 `HANDOFF.md`；必要时在已有的 `AGENTS.md`、`CLAUDE.md` 或 `README.md` 顶部加一行入口提示。
+- 不把整个仓库、凭据、私聊记忆或运行态数据复制进交接文档。
+- 默认不写敏感信息；如果项目确实需要记录敏感边界，或用户明确要求，agent 必须先询问，并且只记录最小必要的路径、用途和边界，不写秘密值。
+- 示例内容是虚构的，不复制任何真实项目。
 
-## 维护
+## 维护方式
 
-- 每次大改动：更新状态快照 + 在变更历史追加一行；大功能同步进项目 README。
-- 换 agent：必须写清「当前状态 / 未完成 / 下一步建议 / 待确认点」，不能只写「已完成」。
+每次交接或大改动后，更新当前状态、工作区状态、已验证/未验证项、未完成事项和变更历史。换 agent 时必须写清当前状态、下一步建议和待确认点；只写“已完成”不算交接。
 
-## English
-
-A harness-agnostic **handoff skill** for any coding/agent environment. It produces a single terse `HANDOFF.md` (≤150 lines) at the project root so that the next agent — Codex, Claude, DSH, or any other — can pick the work up with minimal token cost. It only needs file read/write; git, shell and network are optional. Install by copying the folder into your harness's skills directory.
-
-## License
+## 许可证
 
 [MIT](LICENSE)
